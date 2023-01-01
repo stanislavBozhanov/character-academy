@@ -53,7 +53,7 @@ app.get('/test_jwt', passport.authenticate('jwt'), (req, res) => {
 });
 
 // Register a user
-app.post('/register', (req, res) => {
+app.post('/register', async (req, res) => {
   if (!req.body.username || !req.body.password) {
     res.sendStatus(400).send('Missing username or password');
   }
@@ -67,26 +67,39 @@ app.post('/register', (req, res) => {
   const passwordHash = crypto.pbkdf2Sync(password, salt, 100000, 512, 'sha512');
 
   users.push({ username, passwordHash, salt }); // create user object in the DB
+
+  await User.create({
+    username: username,
+    passwordHash: passwordHash,
+    salt: salt,
+  });
+
   res.status(201).send(users);
 
   console.log(users);
 });
 
 // Login and return token
-app.post('/login', (req, res) => {
+app.post('/login', async (req, res) => {
   if (!req.body.username || !req.body.password) {
     res.sendStatus(400).send('Missing username or password');
   }
 
-  const user = users.find((u) => u.username === req.body.username);
-  if (!user) {
+  const result = await User.findAll({
+    where: {
+      username: req.body.username,
+    },
+  });
+  const userModel = result[0];
+  if (!userModel) {
     res.status(404).send('User does not exits!');
   }
+  const userData = userModel.dataValues;
   const password = req.body.password.toString();
-  const newHash = crypto.pbkdf2Sync(password, user.salt, 100000, 512, 'sha512');
+  const newHash = crypto.pbkdf2Sync(password, userData.salt, 100000, 512, 'sha512');
 
   // check if you can compare buffers directly for better efficiency
-  if (user.passwordHash.toString('hex') === newHash.toString('hex')) {
+  if (userData.passwordHash.toString('hex') === newHash.toString('hex')) {
     const role = 'admin'; // just testing some stuff later we will have 2 roles in the app
     const userObject = {
       username: req.body.username,
@@ -94,7 +107,9 @@ app.post('/login', (req, res) => {
     };
     const accessToken = jwt.sign(userObject, SECRET, { expiresIn: '3h' });
     const refreshToken = jwt.sign(userObject, REFRESH_SECRET, { expiresIn: '7d' });
-    refreshTokens[refreshToken] = req.body.username; // we will save the token in the user db object
+    await userModel.update({
+      refreshToken: refreshToken,
+    });
     res.json({ accessToken: `JTW${accessToken}`, refreshToken });
   } else {
     res.sendStatus(401);
