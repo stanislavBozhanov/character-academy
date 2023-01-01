@@ -10,7 +10,7 @@ const ExtractJwt = require('passport-jwt').ExtractJwt;
 
 const { initializeDb } = require('./models/index.js');
 
-const port = process.env.TOKEN_SERVER_PORT;
+// const port = process.env.TOKEN_SERVER_PORT;
 const SECRET = 'Shhhhhhhhhh...very big secret!';
 const REFRESH_SECRET = 'Shhhhhhhhhhhhh....another very big secret!';
 
