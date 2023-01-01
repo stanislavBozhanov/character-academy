@@ -1,17 +1,17 @@
-const { Sequelize, DataTypes } = require('sequelize');
+const { Sequelize } = require('sequelize');
 
 const db = new Sequelize({
   dialect: 'sqlite',
   storage: 'academy.sqlite3',
 });
 
-const PK = {
-  type: DataTypes.BIGINT,
-  primaryKey: true,
-  autoIncrement: true,
-};
+const User = require('./user')(db);
+
+async function initializeDb() {
+  await db.sync({ alter: true });
+}
 
 module.exports = {
-  db,
-  PK,
+  User,
+  initializeDb,
 };

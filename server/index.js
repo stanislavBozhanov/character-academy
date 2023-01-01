@@ -1,6 +1,6 @@
 require('dotenv').config();
 const express = require('express');
-const https = require('https');
+const http = require('http');
 // const session = require('express-session');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
@@ -8,7 +8,7 @@ const passport = require('passport');
 const JwtStrategy = require('passport-jwt').Strategy;
 const ExtractJwt = require('passport-jwt').ExtractJwt;
 
-const { initializeDb } = require('./models/index.js');
+const { initializeDb, User } = require('./models/index.js');
 
 // const port = process.env.TOKEN_SERVER_PORT;
 const SECRET = 'Shhhhhhhhhh...very big secret!';
@@ -169,5 +169,5 @@ app.get('/test-some-protected-route', validateToken, (req, res) => {
 
 (async () => {
   await initializeDb();
-  https.createServer({}, app).listen(4000);
+  http.createServer({}, app).listen(4000);
 })();
