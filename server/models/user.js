@@ -20,6 +20,11 @@ const User = db.define(
   }
 );
 
+async function initializeDb(db) {
+  await db.sync({ alter: true });
+}
+
 module.exports = {
+  initializeDb,
   User,
 };
