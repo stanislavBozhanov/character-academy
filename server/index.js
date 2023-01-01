@@ -55,7 +55,7 @@ app.get('/test_jwt', passport.authenticate('jwt'), (req, res) => {
 // Register a user
 app.post('/register', (req, res) => {
   if (!req.body.username || !req.body.password) {
-    res.sendStatus(400);
+    res.sendStatus(400).send('Missing username or password');
   }
 
   const username = req.body.username;
@@ -75,7 +75,7 @@ app.post('/register', (req, res) => {
 // Login and return token
 app.post('/login', (req, res) => {
   if (!req.body.username || !req.body.password) {
-    res.sendStatus(400);
+    res.sendStatus(400).send('Missing username or password');
   }
 
   const user = users.find((u) => u.username === req.body.username);
@@ -120,6 +120,32 @@ app.post('/token', (req, res) => {
   }
 });
 
+function validateToken(req, res, next) {
+  // get token from the request header
+  // request header contains token in the format Bearer <token>
+  const authHeader = req.headers['authorization'];
+  const token = authHeader.split(' ')[1];
+
+  if (!token) {
+    res.sendStatus(400).send('Token not present!');
+  }
+
+  jwt.verify(token, SECRET, (err, user) => {
+    if (err) {
+      res.sendStatus(403).send('Token invalid!');
+    } else {
+      req.user = user;
+      next();
+    }
+  });
+}
+
+app.get('/test-some-protected-route', validateToken, (req, res) => {
+  console.log('Valid token!');
+  console.log(req.user.user);
+  res.send(`${req.user.user} successfully accessed post`);
+});
+//                      OAuth 2.0 Protocol flow
 // +--------+                                           +---------------+
 // |        |--(A)------- Authorization Grant --------->|               |
 // |        |                                           |               |
