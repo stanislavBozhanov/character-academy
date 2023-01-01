@@ -4,7 +4,6 @@ const https = require('https');
 // const session = require('express-session');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
-const randToken = require('rand-token');
 const passport = require('passport');
 const JwtStrategy = require('passport-jwt').Strategy;
 const ExtractJwt = require('passport-jwt').ExtractJwt;
@@ -13,6 +12,7 @@ const { initializeDb } = require('./models/index.js');
 
 const port = process.env.TOKEN_SERVER_PORT;
 const SECRET = 'Shhhhhhhhhh...very big secret!';
+const REFRESH_SECRET = 'Shhhhhhhhhhhhh....another very big secret!';
 
 const app = express();
 // app.use(session({ secret: SECRET, resave: true, saveUninitialized: true }));
@@ -53,7 +53,7 @@ app.get('/test_jwt', passport.authenticate('jwt'), (req, res) => {
 });
 
 // Register a user
-app.post('/createUser', (req, res) => {
+app.post('/register', (req, res) => {
   if (!req.body.username || !req.body.password) {
     res.sendStatus(400);
   }
@@ -61,11 +61,12 @@ app.post('/createUser', (req, res) => {
   const username = req.body.username;
   const password = req.body.password.toString();
 
+  // check if username already exists and throw an error response
+
   const salt = crypto.randomBytes(16).toString('hex');
   const passwordHash = crypto.pbkdf2Sync(password, salt, 100000, 512, 'sha512');
-  // const password = await bcrypt.hash(req.body.password, 10);
 
-  users.push({ username, passwordHash, salt });
+  users.push({ username, passwordHash, salt }); // create user object in the DB
   res.status(201).send(users);
 
   console.log(users);
@@ -84,51 +85,61 @@ app.post('/login', (req, res) => {
   const password = req.body.password.toString();
   const newHash = crypto.pbkdf2Sync(password, user.salt, 100000, 512, 'sha512');
 
+  // check if you can compare buffers directly for better efficiency
   if (user.passwordHash.toString('hex') === newHash.toString('hex')) {
-    const role = 'admin';
+    const role = 'admin'; // just testing some stuff later we will have 2 roles in the app
     const userObject = {
       username: req.body.username,
       role: role,
     };
-    const accessToken = jwt.sign(userObject, SECRET, { expiresIn: 300 });
-    const refreshToken = randToken.uid(256);
-    refreshTokens[refreshToken] = req.body.username;
+    const accessToken = jwt.sign(userObject, SECRET, { expiresIn: '3h' });
+    const refreshToken = jwt.sign(userObject, REFRESH_SECRET, { expiresIn: '7d' });
+    refreshTokens[refreshToken] = req.body.username; // we will save the token in the user db object
     res.json({ accessToken: `JTW${accessToken}`, refreshToken });
   } else {
     res.sendStatus(401);
   }
 });
 
+// refresh token endpoint
 app.post('/token', (req, res) => {
-  const username = req.body.name;
+  const username = req.body.username;
   const refreshToken = req.body.refreshToken;
-  if (
-    refreshToken in refreshTokens &&
-    refreshTokens[refreshToken] === username
-  ) {
+  if (refreshToken in refreshTokens && refreshTokens[refreshToken] === username) {
     const userObject = {
       username,
       role: 'admin',
     };
-    const token = jwt.sign(userObject, SECRET, { expiresIn: 300 });
-    res.json({ token: `JWT${token}` });
+    const accessToken = jwt.sign(userObject, SECRET, { expiresIn: '3h' });
+    const newRefreshToken = jwt.sign(userObject, REFRESH_SECRET, { expiresIn: '7d' });
+    res.json({ accessToken: `JWT${accessToken}`, newRefreshToken });
+    delete refreshTokens[refreshToken];
+    refreshTokens[newRefreshToken] = username;
   } else {
     res.sendStatus(401);
   }
 });
 
-// Not a bad idea to have a reject token endpoint if the refresh token gets stolen
-// app.post('/token/reject', (req, res) => {
-//   const refreshToken = req.body.refreshToken;
-//   if (refreshToken in refreshTokens) {
-//     delete refreshTokens[refreshToken];
-//   }
-//   res.send(204);
-// });
-
-// app.listen(port, () => {
-//   console.log(`Auth server running on port: ${port}`);
-// });
+// +--------+                                           +---------------+
+// |        |--(A)------- Authorization Grant --------->|               |
+// |        |                                           |               |
+// |        |<-(B)----------- Access Token -------------|               |
+// |        |               & Refresh Token             |               |
+// |        |                                           |               |
+// |        |                            +----------+   |               |
+// |        |--(C)---- Access Token ---->|          |   |               |
+// |        |                            |          |   |               |
+// |        |<-(D)- Protected Resource --| Resource |   | Authorization |
+// | Client |                            |  Server  |   |     Server    |
+// |        |--(E)---- Access Token ---->|          |   |               |
+// |        |                            |          |   |               |
+// |        |<-(F)- Invalid Token Error -|          |   |               |
+// |        |                            +----------+   |               |
+// |        |                                           |               |
+// |        |--(G)----------- Refresh Token ----------->|               |
+// |        |                                           |               |
+// |        |<-(H)----------- Access Token -------------|               |
+// +--------+           & Optional Refresh Token        +---------------+
 
 (async () => {
   await initializeDb();
