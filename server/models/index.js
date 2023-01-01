@@ -5,10 +5,6 @@ const db = new Sequelize({
   storage: 'academy.sqlite3',
 });
 
-async function initializeDb() {
-  await db.sync({ alter: true });
-}
-
 const PK = {
   type: DataTypes.BIGINT,
   primaryKey: true,
@@ -16,7 +12,6 @@ const PK = {
 };
 
 module.exports = {
-  initializeDb,
   db,
   PK,
 };
