@@ -1,6 +1,6 @@
 require('dotenv').config();
 const express = require('express');
-// const session = require('express-session');
+const session = require('express-session');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const randToken = require('rand-token');
@@ -12,7 +12,7 @@ const port = process.env.TOKEN_SERVER_PORT;
 const SECRET = 'Shhhhhhhhhh...very big secret!';
 
 const app = express();
-// app.use(session({ secret: SECRET, resave: true, saveUninitialized: true }));
+app.use(session({ secret: SECRET, resave: true, saveUninitialized: true }));
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(express.json()); // So we can pull req.body.<params>
@@ -20,11 +20,12 @@ app.use(express.json()); // So we can pull req.body.<params>
 const users = [];
 const refreshTokens = {};
 
-const opts = {};
-opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
-opts.secretOrKey = SECRET;
-opts.issuer = 'accounts.examplesoft.com'; // dummy data
-opts.audience = 'yoursite.net'; // dummy data
+const opts = {
+  jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
+  secretOrKey: SECRET,
+  issuer = 'accounts.examplesoft.com', // dummy data
+  audience = 'yoursite.net', // dummy data
+};
 
 passport.use(
   new JwtStrategy(opts, (jwtPayload, done) => {
