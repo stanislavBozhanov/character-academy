@@ -12,10 +12,11 @@ Character Academy requires [Node.js](https://nodejs.org/) v18.6+ to run.
 
 Install the dependencies and devDependencies and start the server.
 
+Starting the backend server which you can currently ping with Postman
 ```sh
 cd character-academy
 npm ci
-npm run dev
+node ./server/index.js 
 ```
 
 ## License
