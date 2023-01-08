@@ -16,7 +16,7 @@ import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { handleLogin } from './utils/auth';
 
 const Login = () => {
-  const [username, setUsername] = React.useState('');
+  const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [showPassword, setShowPassword] = React.useState(false);
   const handleClickShowPassword = () => setShowPassword((show) => !show);
@@ -25,12 +25,14 @@ const Login = () => {
   ) => {
     event.preventDefault();
   };
-  const handleSubmit = async () => {
-    await handleLogin(username, password);
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    console.log('clicked');
+    await handleLogin(email, password);
     // Router.push('some-url');
   };
 
-  //disable submit button if username or password are empty
+  //disable submit button if email or password are empty
 
   return (
     <div>
@@ -48,6 +50,8 @@ const Login = () => {
                 <Grid>
                   <TextField
                     type='email'
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     fullWidth
                     label='Enter your email'
                     placeholder='Email address'
@@ -59,6 +63,8 @@ const Login = () => {
                 <Grid>
                   <TextField
                     type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     fullWidth
                     label='Enter your password'
                     placeholder='Password'
@@ -86,7 +92,7 @@ const Login = () => {
                   />
                 </Grid>
                 <Grid>
-                  <Button fullWidth variant='contained'>
+                  <Button fullWidth variant='contained' type='submit'>
                     Sign In
                   </Button>
                 </Grid>

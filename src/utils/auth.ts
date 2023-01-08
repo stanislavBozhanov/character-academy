@@ -14,10 +14,10 @@ export const setRefreshJwtToken = (token: string) => {
   sessionStorage.setItem('jwtRefresh', token);
 };
 
-export const handleLogin = async (username: string, password: string) => {
+export const handleLogin = async (email: string, password: string) => {
   const response = await fetch('/login', {
     method: 'POST',
-    body: JSON.stringify({ username, password }),
+    body: JSON.stringify({ email, password }),
   });
   // handle error from the backend
   const { accessToken, refreshToken } = await response.json();
