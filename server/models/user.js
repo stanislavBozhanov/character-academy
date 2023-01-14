@@ -16,12 +16,17 @@ module.exports = (db) => {
       passwordHash: DataTypes.STRING,
       refreshToken: DataTypes.STRING,
       salt: DataTypes.STRING,
+      role: DataTypes.STRING,
     },
     {
       indexes: [
         {
           unique: true,
           fields: ['username'],
+        },
+        {
+          unique: true,
+          fields: ['email'],
         },
       ],
     }

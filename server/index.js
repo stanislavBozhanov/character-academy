@@ -13,6 +13,7 @@ const { initializeDb, User } = require('./models/index.js');
 // const port = process.env.TOKEN_SERVER_PORT;
 const SECRET = 'Shhhhhhhhhh...very big secret!';
 const REFRESH_SECRET = 'Shhhhhhhhhhhhh....another very big secret!';
+const DEFAULT_ROLE = 'user';
 
 const app = express();
 // app.use(session({ secret: SECRET, resave: true, saveUninitialized: true }));
@@ -54,84 +55,123 @@ app.get('/test_jwt', passport.authenticate('jwt'), (req, res) => {
 
 // Register a user
 app.post('/register', async (req, res) => {
-  if (!req.body.username || !req.body.password) {
-    res.sendStatus(400).send('Missing username or password');
+  if (!req.body.username || !req.body.password || !req.body.email) {
+    res.status(400).json({ message: 'Missing email, password or username!' });
+    res.send();
+    return;
   }
 
-  const username = req.body.username;
+  const username = req.body.username.toString();
   const password = req.body.password.toString();
-
-  // check if username already exists and throw an error response
+  const email = req.body.email.toString();
 
   const salt = crypto.randomBytes(16).toString('hex');
   const passwordHash = crypto.pbkdf2Sync(password, salt, 100000, 512, 'sha512');
 
-  users.push({ username, passwordHash, salt }); // create user object in the DB
+  // TODO check if username already exists and throw an error response
+  // TODO handle creating users with the same name or the same email
 
-  await User.create({
-    username: username,
-    passwordHash: passwordHash,
-    salt: salt,
+  const resultEmail = await User.findAll({
+    where: {
+      email: req.body.email,
+    },
   });
-
-  res.status(201).send(users);
-
-  console.log(users);
-});
-
-// Login and return token
-app.post('/login', async (req, res) => {
-  if (!req.body.username || !req.body.password) {
-    res.sendStatus(400).send('Missing username or password');
+  if (resultEmail.length) {
+    res.status(400).json({ message: 'User with that email already exists!' });
+    res.send();
+    return;
   }
 
-  const result = await User.findAll({
+  const resultUsername = await User.findAll({
     where: {
       username: req.body.username,
     },
   });
+  if (resultUsername.length) {
+    res.status(400).json({ message: 'User with that username already exists!' });
+    res.send();
+    return;
+  }
+
+  await User.create({
+    username: username,
+    email: email,
+    passwordHash: passwordHash,
+    salt: salt,
+    role: DEFAULT_ROLE,
+  });
+
+  res.status(201).send('User successfully created!');
+});
+
+// Login and return token
+app.post('/login', async (req, res) => {
+  if (!req.body.email || !req.body.password) {
+    res.status(400).json({ message: 'Missing email or password!' });
+    res.send();
+    return;
+  }
+
+  // TODO Make a safe switch to allow only 10 password attempts every 1 hour or something
+  const result = await User.findAll({
+    where: {
+      email: req.body.email,
+    },
+  });
   const userModel = result[0];
   if (!userModel) {
-    res.status(404).send('User does not exits!');
+    res.status(404).json({ message: 'User does not exits!' });
+    res.send();
+    return;
   }
+
   const userData = userModel.dataValues;
   const password = req.body.password.toString();
   const newHash = crypto.pbkdf2Sync(password, userData.salt, 100000, 512, 'sha512');
 
-  // check if you can compare buffers directly for better efficiency
-  if (userData.passwordHash.toString('hex') === newHash.toString('hex')) {
-    const role = 'admin'; // just testing some stuff later we will have 2 roles in the app
+  if (crypto.timingSafeEqual(userData.passwordHash, newHash)) {
+    // default role will be user. Admins will be manually created for now
     const userObject = {
-      username: req.body.username,
-      role: role,
+      username: userModel.username,
+      email: userModel.email,
+      role: DEFAULT_ROLE,
     };
     const accessToken = jwt.sign(userObject, SECRET, { expiresIn: '3h' });
     const refreshToken = jwt.sign(userObject, REFRESH_SECRET, { expiresIn: '7d' });
     await userModel.update({
       refreshToken: refreshToken,
     });
-    res.json({ accessToken: `JTW${accessToken}`, refreshToken });
+    res.status(200).json({ accessToken: `JTW${accessToken}`, refreshToken });
   } else {
-    res.sendStatus(401);
+    res.status(401).json({ message: 'Invalid password!' });
   }
 });
 
 // refresh token endpoint
-app.post('/token', (req, res) => {
-  const username = req.body.username;
+app.post('/token', async (req, res) => {
+  const email = req.body.email;
   const refreshToken = req.body.refreshToken;
-  if (refreshToken in refreshTokens && refreshTokens[refreshToken] === username) {
+  const result = await User.findAll({
+    where: {
+      email: req.body.email,
+    },
+  });
+  const userModel = result[0];
+  if (refreshToken === userModel.refreshToken) {
     const userObject = {
-      username,
-      role: 'admin',
+      username: userModel.username,
+      email: userModel.email,
+      role: DEFAULT_ROLE,
     };
     const accessToken = jwt.sign(userObject, SECRET, { expiresIn: '3h' });
     const newRefreshToken = jwt.sign(userObject, REFRESH_SECRET, { expiresIn: '7d' });
     res.json({ accessToken: `JWT${accessToken}`, newRefreshToken });
-    delete refreshTokens[refreshToken];
-    refreshTokens[newRefreshToken] = username;
+    await userModel.update({
+      refreshToken: newRefreshToken,
+    });
+    res.status(201).send('JTW token updated!');
   } else {
-    res.sendStatus(401);
+    res.status(401).json({ message: 'Invalid refresh token!' });
   }
 });
 
