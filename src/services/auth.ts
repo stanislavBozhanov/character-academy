@@ -25,3 +25,16 @@ export const handleLogin = async (email: string, password: string) => {
   setAccessJwtToken(accessToken);
   setRefreshJwtToken(refreshToken);
 };
+
+export const handleRegister = async (email: string, password: string, username: string) => {
+  const response = await fetch('/register', {
+    method: 'POST',
+    body: JSON.stringify({ email, password, username }),
+  });
+
+  if (response.ok) {
+    // redirect to login?
+  } else {
+    // return error
+  }
+};

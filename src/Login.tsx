@@ -13,16 +13,14 @@ import {
 } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
-import { handleLogin } from './utils/auth';
+import { handleLogin } from './services/auth';
 
 const Login = () => {
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [showPassword, setShowPassword] = React.useState(false);
   const handleClickShowPassword = () => setShowPassword((show) => !show);
-  const handleMouseDownPassword = (
-    event: React.MouseEvent<HTMLButtonElement>
-  ) => {
+  const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
   };
   const handleSubmit = async (event: React.FormEvent) => {
@@ -37,13 +35,7 @@ const Login = () => {
   return (
     <div>
       <Container maxWidth='sm'>
-        <Grid
-          container
-          spacing={2}
-          direction='column'
-          style={{ minHeight: '100vh' }}
-          justifyContent='center'
-        >
+        <Grid container spacing={2} direction='column' style={{ minHeight: '100vh' }} justifyContent='center'>
           <Paper elevation={2} sx={{ padding: 5 }}>
             <Box component='form' onSubmit={handleSubmit} noValidate>
               <Grid container spacing={2} direction='column'>
@@ -86,10 +78,7 @@ const Login = () => {
                   />
                 </Grid>
                 <Grid>
-                  <FormControlLabel
-                    control={<Checkbox value='remember' color='primary' />}
-                    label='Remember me'
-                  />
+                  <FormControlLabel control={<Checkbox value='remember' color='primary' />} label='Remember me' />
                 </Grid>
                 <Grid>
                   <Button fullWidth variant='contained' type='submit'>
@@ -104,7 +93,7 @@ const Login = () => {
                   </Link>
                 </Grid>
                 <Grid>
-                  <Link href='#' variant='body2'>
+                  <Link href='/register' variant='body2'>
                     {"Don't have an account? Sign Up"}
                   </Link>
                 </Grid>

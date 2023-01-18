@@ -18,7 +18,7 @@ const DEFAULT_ROLE = 'user';
 const app = express();
 // app.use(session({ secret: SECRET, resave: true, saveUninitialized: true }));
 app.use(passport.initialize());
-// app.use(passport.session());
+// app.use(passport.session());  // TODO check if passport requires this
 app.use(express.json()); // So we can pull req.body.<params>
 
 const users = [];
@@ -41,12 +41,9 @@ const jwtStrategy = new JwtStrategy(jwtOptions, (jwtPayload, done) => {
 
 passport.use(jwtStrategy);
 
+// TODO check if passport requires this
 // passport.serializeUser((user, done) => {
 //   done(null, user.username);
-// });
-
-// passport.deserializeUser((username, done) => {
-//   done(null, username);
 // });
 
 app.get('/test_jwt', passport.authenticate('jwt'), (req, res) => {
