@@ -1,7 +1,20 @@
-import React from 'react';
+import * as React from 'react';
+import { NavLink, Outlet } from 'react-router-dom';
 
 const App = () => {
-  return <h1>Hello</h1>;
+  return (
+    <div>
+      <h1>Character Academy</h1>
+      <nav>
+        <NavLink to='register'>Register</NavLink>
+        <NavLink to='login'>Login</NavLink>
+      </nav>
+
+      <main>
+        <Outlet />
+      </main>
+    </div>
+  );
 };
 
 export default App;
