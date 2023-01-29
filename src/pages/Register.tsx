@@ -2,8 +2,8 @@ import React from 'react';
 import { Container, Paper, TextField, Button, InputAdornment, IconButton, Box, Link } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
-import ReCAPTCHA from 'react-google-recaptcha';
-import { handleRegister } from './services/auth';
+// import ReCAPTCHA from 'react-google-recaptcha';
+import { handleRegister } from '../services/auth';
 
 const TEST_RECAPTCHA_KEY = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI';
 
@@ -30,13 +30,14 @@ const Register = () => {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     console.log('clicked');
-    await handleRegister(values.email.value, values.password.value, values.username.value);
+    const response = await handleRegister(values.email.value, values.password.value, values.username.value);
+    debugger;
     // Router.push('some-url');
   };
 
-  const onChangeRecaptcha = (value: any) => {
-    console.log('clicked', value);
-  };
+  // const onChangeRecaptcha = (value: any) => {
+  //   console.log('clicked', value);
+  // };
   //disable submit button if email or password are empty
 
   console.log(values);
@@ -130,9 +131,9 @@ const Register = () => {
                     error
                   />
                 </Grid>
-                <Grid>
+                {/* <Grid>
                   <ReCAPTCHA sitekey={TEST_RECAPTCHA_KEY} onChange={onChangeRecaptcha} />
-                </Grid>
+                </Grid> */}
                 <Grid>
                   <Button fullWidth variant='contained' type='submit'>
                     Register

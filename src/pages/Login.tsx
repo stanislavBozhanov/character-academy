@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
-import { handleLogin } from './services/auth';
+import { handleLogin } from '../services/auth';
 
 const Login = () => {
   const [email, setEmail] = React.useState('');

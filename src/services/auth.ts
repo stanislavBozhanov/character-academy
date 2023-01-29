@@ -1,3 +1,5 @@
+import { serverRoutes } from './routes';
+
 export const getAccessJwtToken = () => {
   return sessionStorage.getItem('jwtAccess');
 };
@@ -15,7 +17,7 @@ export const setRefreshJwtToken = (token: string) => {
 };
 
 export const handleLogin = async (email: string, password: string) => {
-  const response = await fetch('/login', {
+  const response = await fetch(serverRoutes.login, {
     method: 'POST',
     body: JSON.stringify({ email, password }),
   });
@@ -27,14 +29,11 @@ export const handleLogin = async (email: string, password: string) => {
 };
 
 export const handleRegister = async (email: string, password: string, username: string) => {
-  const response = await fetch('/register', {
+  const response = await fetch(serverRoutes.register, {
     method: 'POST',
     body: JSON.stringify({ email, password, username }),
   });
+  debugger;
 
-  if (response.ok) {
-    // redirect to login?
-  } else {
-    // return error
-  }
+  return response;
 };

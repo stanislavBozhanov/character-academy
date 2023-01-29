@@ -8,6 +8,8 @@ const App = () => {
       <nav>
         <NavLink to='register'>Register</NavLink>
         <NavLink to='login'>Login</NavLink>
+        <NavLink to='history'>History</NavLink>
+        <NavLink to='add-workout'>Add Workout</NavLink>
       </nav>
 
       <main>
