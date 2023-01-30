@@ -4,15 +4,18 @@ import Grid from '@mui/material/Unstable_Grid2';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 // import ReCAPTCHA from 'react-google-recaptcha';
 import { handleRegister } from '../services/auth';
+import { ResponseData, responseSuccess } from '../interfaces/index';
+import { redirect } from 'react-router-dom';
+import { clientRoutes } from '../services/routes';
 
 const TEST_RECAPTCHA_KEY = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI';
 
 const Register = () => {
   const [values, setValues] = React.useState({
-    email: { value: '', focused: false },
-    username: { value: '', focused: false },
-    password: { value: '', focused: false },
-    passwordRepeat: { value: '', focused: false },
+    email: '',
+    username: '',
+    password: '',
+    passwordRepeat: '',
     showPassword: false,
     showPasswordRepeat: false,
   });
@@ -20,7 +23,7 @@ const Register = () => {
   const onChangeInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const name = e.target.name;
     const value = e.target.value;
-    // setValues({ ...values, [name]: { ...values[name], value: value } });
+    setValues({ ...values, [name]: value });
   };
   const handleClickShowPassword = () => setValues({ ...values, showPassword: !values.showPassword });
   const handleClickShowPasswordRepeat = () => setValues({ ...values, showPasswordRepeat: !values.showPasswordRepeat });
@@ -29,10 +32,13 @@ const Register = () => {
   };
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    console.log('clicked');
-    const response = await handleRegister(values.email.value, values.password.value, values.username.value);
-    debugger;
-    // Router.push('some-url');
+    const response: ResponseData = await handleRegister(values.email, values.password, values.username);
+    console.log(response);
+    if (response.status === responseSuccess) {
+      redirect(clientRoutes.login);
+    } else {
+      redirect(clientRoutes.register);
+    }
   };
 
   // const onChangeRecaptcha = (value: any) => {
@@ -52,29 +58,29 @@ const Register = () => {
                   <TextField
                     type='email'
                     name='email'
-                    value={values.email.value}
+                    value={values.email}
                     onChange={onChangeInput}
                     fullWidth
                     label='Enter your email'
                     placeholder='Email address'
                     variant='outlined'
                     autoFocus
-                    helperText='Email field cannot be empty!'
-                    error
+                    // helperText='Email field cannot be empty!'
+                    // error
                   />
                 </Grid>
                 <Grid>
                   <TextField
                     type={values.showPassword ? 'text' : 'password'}
                     name='password'
-                    value={values.password.value}
+                    value={values.password}
                     onChange={onChangeInput}
                     fullWidth
                     label='Enter your password'
                     placeholder='Password'
                     variant='outlined'
-                    helperText='Password field cannot be empty!'
-                    error
+                    // helperText='Password field cannot be empty!'
+                    // error
                     InputProps={{
                       endAdornment: (
                         <InputAdornment position='end'>
@@ -94,14 +100,14 @@ const Register = () => {
                   <TextField
                     type={values.showPasswordRepeat ? 'text' : 'password'}
                     name='passwordRepeat'
-                    value={values.passwordRepeat.value}
+                    value={values.passwordRepeat}
                     onChange={onChangeInput}
                     fullWidth
                     label='Confirm your password'
                     placeholder='Password Confirm'
                     variant='outlined'
-                    helperText='Passwords do not match!'
-                    error
+                    // helperText='Passwords do not match!'
+                    // error
                     InputProps={{
                       endAdornment: (
                         <InputAdornment position='end'>
@@ -121,14 +127,14 @@ const Register = () => {
                   <TextField
                     type='text'
                     name='username'
-                    value={values.username.value}
+                    value={values.username}
                     onChange={onChangeInput}
                     fullWidth
                     label='Username'
                     placeholder='Username'
                     variant='outlined'
-                    helperText='Username field cannot be empty!'
-                    error
+                    // helperText='Username field cannot be empty!'
+                    // error
                   />
                 </Grid>
                 {/* <Grid>

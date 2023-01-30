@@ -8,3 +8,10 @@ export const serverRoutes = {
   login: serverRoute('login'),
   register: serverRoute('register'),
 };
+
+export const clientRoutes = {
+  login: 'login',
+  register: 'register',
+  history: 'history',
+  dashboard: '/',
+};

@@ -1,4 +1,5 @@
 import React from 'react';
+import { redirect } from 'react-router-dom';
 import {
   Container,
   Paper,
@@ -14,6 +15,8 @@ import {
 import Grid from '@mui/material/Unstable_Grid2';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { handleLogin } from '../services/auth';
+import { ResponseData, responseSuccess } from '../interfaces/index';
+import { clientRoutes } from '../services/routes';
 
 const Login = () => {
   const [email, setEmail] = React.useState('');
@@ -25,9 +28,14 @@ const Login = () => {
   };
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    console.log('clicked');
-    await handleLogin(email, password);
-    // Router.push('some-url');
+    const response: ResponseData = await handleLogin(email, password);
+    console.log(response);
+    console.log(sessionStorage);
+    if (response.status === responseSuccess) {
+      redirect(clientRoutes.dashboard);
+    } else {
+      redirect(clientRoutes.login);
+    }
   };
 
   //disable submit button if email or password are empty
