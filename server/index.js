@@ -1,6 +1,7 @@
 // require('dotenv').config();
 const express = require('express');
 const http = require('http');
+const cors = require('cors');
 // const session = require('express-session');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
@@ -16,6 +17,7 @@ const REFRESH_SECRET = 'Shhhhhhhhhhhhh....another very big secret!';
 const DEFAULT_ROLE = 'user';
 
 const app = express();
+app.use(cors()); // cors is enabled for all requests and all origins
 // app.use(session({ secret: SECRET, resave: true, saveUninitialized: true }));
 app.use(passport.initialize());
 // app.use(passport.session());  // TODO check if passport requires this
@@ -103,6 +105,7 @@ app.post('/register', async (req, res) => {
 
 // Login and return token
 app.post('/login', async (req, res) => {
+  console.log('here');
   if (!req.body.email || !req.body.password) {
     res.status(400).json({ message: 'Missing email or password!' });
     res.send();

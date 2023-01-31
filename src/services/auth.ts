@@ -1,3 +1,24 @@
+import { ResponseData } from '../interfaces/index';
+import { serverRoutes } from './routes';
+
+const createErrorResponse = (error: Object) => {
+  const result: ResponseData = {
+    status: 'FAIL',
+    error: error,
+    data: null,
+  };
+  return result;
+};
+
+const createSuccessResponse = (data: Object) => {
+  const result: ResponseData = {
+    status: 'SUCCESS',
+    error: null,
+    data: data,
+  };
+  return result;
+};
+
 export const getAccessJwtToken = () => {
   return sessionStorage.getItem('jwtAccess');
 };
@@ -14,27 +35,53 @@ export const setRefreshJwtToken = (token: string) => {
   sessionStorage.setItem('jwtRefresh', token);
 };
 
+const handledFetch = async (resource: string, options?: Object) => {
+  try {
+    const data = await fetch(resource, options);
+    return [data, null];
+  } catch (error) {
+    console.error(error); // TODO Would be nice to have some error pop ups like toasty
+    return [null, error];
+  }
+};
+
 export const handleLogin = async (email: string, password: string) => {
-  const response = await fetch('/login', {
+  const [response, error] = await handledFetch(serverRoutes.login, {
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
     method: 'POST',
     body: JSON.stringify({ email, password }),
   });
-  // handle error from the backend
-  const { accessToken, refreshToken } = await response.json();
+
+  if (error) {
+    return createErrorResponse(error);
+  }
+
+  const jsonData = await response.json();
+  const { accessToken, refreshToken } = jsonData;
 
   setAccessJwtToken(accessToken);
   setRefreshJwtToken(refreshToken);
+
+  return createSuccessResponse(jsonData);
 };
 
 export const handleRegister = async (email: string, password: string, username: string) => {
-  const response = await fetch('/register', {
+  const [response, error] = await handledFetch(serverRoutes.register, {
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
     method: 'POST',
     body: JSON.stringify({ email, password, username }),
   });
-
-  if (response.ok) {
-    // redirect to login?
-  } else {
-    // return error
+  debugger;
+  if (error) {
+    return createErrorResponse(error);
   }
+
+  const jsonData = await response.json();
+  return createSuccessResponse(jsonData);
 };
