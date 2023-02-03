@@ -141,7 +141,7 @@ app.post('/login', async (req, res) => {
     await userModel.update({
       refreshToken: refreshToken,
     });
-    res.status(200).json({ accessToken: `JTW${accessToken}`, refreshToken });
+    res.status(200).json({ accessToken: `JTW${accessToken}`, refreshToken, user: userObject });
   } else {
     res.status(401).json({ message: 'Invalid password!' });
   }

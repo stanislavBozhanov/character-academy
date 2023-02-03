@@ -1,5 +1,5 @@
-import React from 'react';
-import { redirect } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Container,
   Paper,
@@ -19,22 +19,31 @@ import { ResponseData, responseSuccess } from '../interfaces/index';
 import { clientRoutes } from '../services/routes';
 
 const Login = () => {
-  const [email, setEmail] = React.useState('');
-  const [password, setPassword] = React.useState('');
-  const [showPassword, setShowPassword] = React.useState(false);
-  const handleClickShowPassword = () => setShowPassword((show) => !show);
+  const [values, setValues] = useState({
+    email: '',
+    password: '',
+    showPassword: false,
+  });
+  const navigate = useNavigate();
+
+  const onChangeInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const name = e.target.name;
+    const value = e.target.value;
+    setValues({ ...values, [name]: value });
+  };
+  const handleClickShowPassword = () => setValues({ ...values, showPassword: !values.showPassword });
   const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
   };
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    const response: ResponseData = await handleLogin(email, password);
+    const response: ResponseData = await handleLogin(values.email, values.password);
     console.log(response);
     console.log(sessionStorage);
     if (response.status === responseSuccess) {
-      redirect(clientRoutes.dashboard);
+      navigate(clientRoutes.dashboard);
     } else {
-      redirect(clientRoutes.login);
+      navigate(clientRoutes.login);
     }
   };
 
@@ -50,8 +59,9 @@ const Login = () => {
                 <Grid>
                   <TextField
                     type='email'
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    name='email'
+                    value={values.email}
+                    onChange={onChangeInput}
                     fullWidth
                     label='Enter your email'
                     placeholder='Email address'
@@ -62,9 +72,10 @@ const Login = () => {
                 </Grid>
                 <Grid>
                   <TextField
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    name='password'
+                    type={values.showPassword ? 'text' : 'password'}
+                    value={values.password}
+                    onChange={onChangeInput}
                     fullWidth
                     label='Enter your password'
                     placeholder='Password'
@@ -78,7 +89,7 @@ const Login = () => {
                             onClick={handleClickShowPassword}
                             onMouseDown={handleMouseDownPassword}
                           >
-                            {showPassword ? <VisibilityOff /> : <Visibility />}
+                            {values.showPassword ? <VisibilityOff /> : <Visibility />}
                           </IconButton>
                         </InputAdornment>
                       ),
