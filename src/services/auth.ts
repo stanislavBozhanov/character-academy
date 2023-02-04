@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { ResponseData } from '../interfaces/index';
 import { serverRoutes } from './routes';
 
@@ -46,6 +47,7 @@ const handledFetch = async (resource: string, options?: Object) => {
 };
 
 export const handleLogin = async (email: string, password: string) => {
+  const [storedUser, setStoredUser] = useLocalStorageForUser('user', null);
   const [response, error] = await handledFetch(serverRoutes.login, {
     headers: {
       Accept: 'application/json',
@@ -60,8 +62,9 @@ export const handleLogin = async (email: string, password: string) => {
   }
 
   const jsonData = await response.json();
-  const { accessToken, refreshToken } = jsonData;
+  const { accessToken, refreshToken, user } = jsonData;
 
+  setStoredUser(user);
   setAccessJwtToken(accessToken);
   setRefreshJwtToken(refreshToken);
 
@@ -77,11 +80,40 @@ export const handleRegister = async (email: string, password: string, username: 
     method: 'POST',
     body: JSON.stringify({ email, password, username }),
   });
-  debugger;
+
   if (error) {
     return createErrorResponse(error);
   }
 
   const jsonData = await response.json();
   return createSuccessResponse(jsonData);
+};
+
+// Saving the user in the localStorage
+const useLocalStorageForUser = (key: string, defaultValue: Object = null) => {
+  const [storedValue, setStoredValue] = useState(() => {
+    try {
+      const user = window.localStorage.getItem(key);
+      if (user) {
+        return JSON.parse(user);
+      } else {
+        return defaultValue;
+      }
+    } catch (error) {
+      // TODO log errors somewhere
+      console.error(error);
+      return defaultValue;
+    }
+  });
+
+  const setValue = (newValue: Object) => {
+    try {
+      window.localStorage.setItem(key, JSON.stringify(newValue));
+    } catch (error) {
+      console.error(error);
+    }
+    setStoredValue(newValue);
+  };
+
+  return [storedValue, setValue];
 };

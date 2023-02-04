@@ -1,17 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Container, Paper, TextField, Button, InputAdornment, IconButton, Box, Link } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 // import ReCAPTCHA from 'react-google-recaptcha';
 import { handleRegister } from '../services/auth';
 import { ResponseData, responseSuccess } from '../interfaces/index';
-import { redirect } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { clientRoutes } from '../services/routes';
 
 const TEST_RECAPTCHA_KEY = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI';
 
 const Register = () => {
-  const [values, setValues] = React.useState({
+  const [values, setValues] = useState({
     email: '',
     username: '',
     password: '',
@@ -19,6 +19,7 @@ const Register = () => {
     showPassword: false,
     showPasswordRepeat: false,
   });
+  const navigate = useNavigate();
 
   const onChangeInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const name = e.target.name;
@@ -35,9 +36,9 @@ const Register = () => {
     const response: ResponseData = await handleRegister(values.email, values.password, values.username);
     console.log(response);
     if (response.status === responseSuccess) {
-      redirect(clientRoutes.login);
+      navigate(clientRoutes.login);
     } else {
-      redirect(clientRoutes.register);
+      navigate(clientRoutes.register);
     }
   };
 
