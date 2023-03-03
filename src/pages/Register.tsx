@@ -4,7 +4,7 @@ import Grid from '@mui/material/Unstable_Grid2';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 // import ReCAPTCHA from 'react-google-recaptcha';
 import { handleRegister } from '../services/auth';
-import { ResponseData, responseSuccess } from '../interfaces/index';
+import { APIResponse, responseSuccess } from '../interfaces/index';
 import { useNavigate } from 'react-router-dom';
 import { clientRoutes } from '../services/routes';
 
@@ -33,7 +33,7 @@ const Register = () => {
   };
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    const response: ResponseData = await handleRegister(values.email, values.password, values.username);
+    const response: APIResponse = await handleRegister(values.email, values.password, values.username);
     console.log(response);
     if (response.status === responseSuccess) {
       navigate(clientRoutes.login);

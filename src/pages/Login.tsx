@@ -14,9 +14,10 @@ import {
 } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
-import { handleLogin } from '../services/auth';
-import { ResponseData, responseSuccess } from '../interfaces/index';
+import { handleLogin, setAccessJwtToken, setRefreshJwtToken } from '../services/auth';
+import { LoginResponse, responseSuccess } from '../interfaces/index';
 import { clientRoutes } from '../services/routes';
+import { myLocalStorage } from '../services/utils';
 
 const Login = () => {
   const [values, setValues] = useState({
@@ -25,6 +26,7 @@ const Login = () => {
     showPassword: false,
   });
   const navigate = useNavigate();
+  const [storedUser, setStoredUser] = myLocalStorage('user');
 
   const onChangeInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const name = e.target.name;
@@ -37,9 +39,19 @@ const Login = () => {
   };
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    const response: ResponseData = await handleLogin(values.email, values.password);
-    console.log(response);
-    console.log(sessionStorage);
+    const response: LoginResponse = await handleLogin(values.email, values.password);
+
+    if (response.error) {
+      navigate(`/${clientRoutes.error}`); // TODO: fix this with better error handling
+      return;
+    }
+
+    const { user, accessToken, refreshToken } = response.data;
+
+    setStoredUser(user);
+    setAccessJwtToken(accessToken);
+    setRefreshJwtToken(refreshToken);
+
     if (response.status === responseSuccess) {
       navigate(clientRoutes.dashboard);
     } else {

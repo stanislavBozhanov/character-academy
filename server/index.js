@@ -148,16 +148,24 @@ app.post('/login', async (req, res) => {
 });
 
 // refresh token endpoint
-app.post('/token', async (req, res) => {
+app.post('/refresh-token', async (req, res) => {
   const email = req.body.email;
   const refreshToken = req.body.refreshToken;
+
+  if (!req.body.email || !req.body.refreshToken) {
+    res.status(400).json({ message: 'Missing email or refreshToken!' });
+    res.send();
+    return;
+  }
+
   const result = await User.findAll({
     where: {
-      email: req.body.email,
+      email,
     },
   });
   const userModel = result[0];
   if (refreshToken === userModel.refreshToken) {
+    // TODO: if refresh token expired gotta return error and redirect to login page
     const userObject = {
       username: userModel.username,
       email: userModel.email,
@@ -199,6 +207,10 @@ app.get('/test-some-protected-route', validateToken, (req, res) => {
   console.log('Valid token!');
   console.log(req.user.user);
   res.send(`${req.user.user} successfully accessed post`);
+});
+
+app.get('/test-api', (req, res) => {
+  res.sendStatus(403).send('Invalid stuff');
 });
 //                      OAuth 2.0 Protocol flow
 // +--------+                                           +---------------+

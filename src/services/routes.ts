@@ -7,6 +7,8 @@ const serverRoute = (name: string | URL): string => {
 export const serverRoutes = {
   login: serverRoute('login'),
   register: serverRoute('register'),
+  tokenRefresh: serverRoute('refresh-token'),
+  test: serverRoute('test-apix'),
 };
 
 export const clientRoutes = {
@@ -14,4 +16,5 @@ export const clientRoutes = {
   register: 'register',
   history: 'history',
   dashboard: '/',
+  error: 'error',
 };
