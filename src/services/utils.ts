@@ -57,29 +57,9 @@ export const handledFetch = async (resource: string, options?: Object) => {
   }
 };
 
-// Fetch wrapper expects that we have an token stored in session storage
-export const fetchWrapper = () => {
-  // const [token, setToken] = useState(async () => {
-  //   const accessToken = sessionStorage.getItem('accessToken');
-  //   const refreshToken = sessionStorage.getItem('refreshToken');
-  //   if (!accessToken) {
-  //     try {
-  //       const response = await fetch(serverRoutes.tokenRefresh, {
-  //         headers: {
-  //           Accept: 'application/json',
-  //           'Content-Type': 'application/json',
-  //         },
-  //         method: 'POST',
-  //         body: JSON.stringify({ email, token }),
-  //       });
-  //     }
-
-  //   }
-  //  // implement access and refresh logic
-  //   const setToken = () => sessionStorage.setItem('');
-  //   return [token, setToken];
-  // });
-
+// Fetch wrapper expects that we have an token stored in session storage for auth
+// If not so tries to get a new token
+const fetchWrapper = () => {
   return {
     get: request('GET'),
     post: request('POST'),
@@ -105,8 +85,12 @@ export const fetchWrapper = () => {
   
   */
   async function setNewTokens() {
-    const [user, setUser] = myLocalStorage('user');
+    const [user, _] = myLocalStorage('user');
     const refreshToken = sessionStorage.getItem('refreshToken');
+
+    if (!user || !refreshToken) {
+      throw new Error('Missing user or refresh token!');
+    }
 
     const [data, error] = await handledFetch(serverRoutes.tokenRefresh, {
       headers: {
@@ -117,11 +101,10 @@ export const fetchWrapper = () => {
       body: JSON.stringify({ email: user.email, refreshToken: refreshToken }),
     });
 
-    if (error) {
+    // Error or codes different than 2XX
+    if (error || !data.ok) {
       throw new Error(`${error.message}/nCannot get new token!`); // TODO gotta figure some decent error handling
     }
-
-    // TODO make a second check for bad response codes
 
     const { accessToken: newAccsess, refreshToken: newRefresh } = await data.json();
     sessionStorage.setItem('accessToken', newAccsess);
@@ -129,7 +112,7 @@ export const fetchWrapper = () => {
   }
 
   function request(method: httpMethod) {
-    return async (url: string, body: object): Promise<any> => {
+    return async (url: string, body?: object): Promise<any> => {
       const requestOptions: any = {
         method,
         headers: authHeader(),
@@ -149,49 +132,34 @@ export const fetchWrapper = () => {
     };
   }
 
-  function handleResponse(response: Response, method?: httpMethod, url?: string, body?: object): Promise<Object> {
-    return new Promise(async (resolve, reject) => {
-      // accessToken expired
-      const navigate = useNavigate();
-      if (response.status === 401) {
-        try {
-          console.log('Set new tokens');
-          await setNewTokens();
-        } catch (error) {
-          console.error(error);
-          localStorage.setItem('user', null);
-          navigate('/login');
-        }
+  async function handleResponse(response: Response, method?: httpMethod, url?: string, body?: object): Promise<Object> {
+    const navigate = useNavigate();
 
-        return request(method)(url, body);
+    // accessToken expired
+    if (response.status === 401) {
+      try {
+        console.log('Set new tokens');
+        await setNewTokens();
+      } catch (error) {
+        console.error(error);
+        localStorage.setItem('user', null);
+        navigate('/login');
+        return Promise.reject({ error: { message: 'Unable to fetch fresh tokens!' } });
       }
 
-      if (!response.ok) {
-        throw new Error('....-');
-      }
-    });
+      return request(method)(url, body);
+    }
 
-    // return response.text().then((text) => {
-    //   const data = text && JSON.parse(text);
+    // Response.ok is true for codes between 200 and 299
+    if (response.ok) {
+      return Promise.resolve(response);
+    }
 
-    //   if (!response.ok) {
-    //     if ([401, 403].includes(response.status) && auth?.token) {
-    //       // auto logout if 401 Unauthorized or 403 Forbidden response returned from api
-    //       localStorage.removeItem('user');
-    //       setAuth(null);
-    //       history.push('/login');
-    //     }
-
-    //     const error = (data && data.message) || response.statusText;
-    //     return Promise.reject(error);
-    //   }
-
-    //   return data;
-    // });
+    return Promise.reject({ error: { message: 'Problem with server response' } });
   }
 };
 
-export const fetchGet = (url: string, body: object) => fetchWrapper().get(url, body);
-export const fetchPost = (url: string, body: object) => fetchWrapper().post(url, body);
-export const fetchPut = (url: string, body: object) => fetchWrapper().put(url, body);
-export const fetchDelete = (url: string, body: object) => fetchWrapper().delete(url, body);
+export const fetchGet = (url: string, body?: object) => fetchWrapper().get(url, body);
+export const fetchPost = (url: string, body?: object) => fetchWrapper().post(url, body);
+export const fetchPut = (url: string, body?: object) => fetchWrapper().put(url, body);
+export const fetchDelete = (url: string, body?: object) => fetchWrapper().delete(url, body);

@@ -8,7 +8,7 @@ export const serverRoutes = {
   login: serverRoute('login'),
   register: serverRoute('register'),
   tokenRefresh: serverRoute('refresh-token'),
-  test: serverRoute('test-apix'),
+  test: serverRoute('test-api'),
 };
 
 export const clientRoutes = {

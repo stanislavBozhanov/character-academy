@@ -49,15 +49,13 @@ passport.use(jwtStrategy);
 // });
 
 app.get('/test_jwt', passport.authenticate('jwt'), (req, res) => {
-  res.json({ success: 'You are authenticated with JWT!', user: req.user });
+  res.status(200).json({ message: 'You are authenticated with JWT!', user: req.user });
 });
 
 // Register a user
 app.post('/register', async (req, res) => {
   if (!req.body.username || !req.body.password || !req.body.email) {
     res.status(400).json({ message: 'Missing email, password or username!' });
-    res.send();
-    return;
   }
 
   const username = req.body.username.toString();
@@ -77,8 +75,6 @@ app.post('/register', async (req, res) => {
   });
   if (resultEmail.length) {
     res.status(400).json({ message: 'User with that email already exists!' });
-    res.send();
-    return;
   }
 
   const resultUsername = await User.findAll({
@@ -88,8 +84,6 @@ app.post('/register', async (req, res) => {
   });
   if (resultUsername.length) {
     res.status(400).json({ message: 'User with that username already exists!' });
-    res.send();
-    return;
   }
 
   await User.create({
@@ -100,16 +94,13 @@ app.post('/register', async (req, res) => {
     role: DEFAULT_ROLE,
   });
 
-  res.status(201).send('User successfully created!');
+  res.status(201).json({ message: 'User successfully created!' });
 });
 
 // Login and return token
 app.post('/login', async (req, res) => {
-  console.log('here');
   if (!req.body.email || !req.body.password) {
     res.status(400).json({ message: 'Missing email or password!' });
-    res.send();
-    return;
   }
 
   // TODO Make a safe switch to allow only 10 password attempts every 1 hour or something
@@ -121,7 +112,6 @@ app.post('/login', async (req, res) => {
   const userModel = result[0];
   if (!userModel) {
     res.status(404).json({ message: 'User does not exits!' });
-    res.send();
     return;
   }
 
@@ -141,7 +131,7 @@ app.post('/login', async (req, res) => {
     await userModel.update({
       refreshToken: refreshToken,
     });
-    res.status(200).json({ accessToken: `JTW${accessToken}`, refreshToken, user: userObject });
+    res.status(200).json({ message: 'Success', accessToken: `JTW${accessToken}`, refreshToken, user: userObject });
   } else {
     res.status(401).json({ message: 'Invalid password!' });
   }
@@ -154,8 +144,13 @@ app.post('/refresh-token', async (req, res) => {
 
   if (!req.body.email || !req.body.refreshToken) {
     res.status(400).json({ message: 'Missing email or refreshToken!' });
-    res.send();
-    return;
+  }
+
+  // verify refresh token
+  try {
+    data = jwt.verify(refreshToken, REFRESH_SECRET);
+  } catch (error) {
+    res.status(400).json({ message: error?.message });
   }
 
   const result = await User.findAll({
@@ -165,19 +160,18 @@ app.post('/refresh-token', async (req, res) => {
   });
   const userModel = result[0];
   if (refreshToken === userModel.refreshToken) {
-    // TODO: if refresh token expired gotta return error and redirect to login page
     const userObject = {
       username: userModel.username,
       email: userModel.email,
       role: DEFAULT_ROLE,
     };
-    const accessToken = jwt.sign(userObject, SECRET, { expiresIn: '3h' });
+    const accessToken = jwt.sign(userObject, SECRET, { expiresIn: '120' }); // temporary set to 120 secs to debug
     const newRefreshToken = jwt.sign(userObject, REFRESH_SECRET, { expiresIn: '7d' });
-    res.json({ accessToken: `JWT${accessToken}`, newRefreshToken });
+    res.status(200).json({ message: 'Success', accessToken: `JWT${accessToken}`, newRefreshToken });
     await userModel.update({
       refreshToken: newRefreshToken,
     });
-    res.status(201).send('JTW token updated!');
+    res.status(201).json({ message: 'JTW token updated!' });
   } else {
     res.status(401).json({ message: 'Invalid refresh token!' });
   }
@@ -187,15 +181,21 @@ function validateToken(req, res, next) {
   // get token from the request header
   // request header contains token in the format Bearer <token>
   const authHeader = req.headers['authorization'];
-  const token = authHeader.split(' ')[1];
+  if (!authHeader) {
+    return res.status(400).json({ message: 'Token not present!' });
+  }
 
+  const token = authHeader.split(' ')[1];
   if (!token) {
-    res.sendStatus(400).send('Token not present!');
+    return res.status(400).json({ message: 'Token not present!' });
   }
 
   jwt.verify(token, SECRET, (err, user) => {
     if (err) {
-      res.sendStatus(403).send('Token invalid!');
+      if (err.name === 'TokenExpiredError') {
+        return res.status(401).json({ message: 'Token expired!' });
+      }
+      return res.status(403).json({ message: 'Token invalid!' });
     } else {
       req.user = user;
       next();
@@ -206,11 +206,11 @@ function validateToken(req, res, next) {
 app.get('/test-some-protected-route', validateToken, (req, res) => {
   console.log('Valid token!');
   console.log(req.user.user);
-  res.send(`${req.user.user} successfully accessed post`);
+  res.json({ message: `${req.user.user} successfully accessed post` });
 });
 
-app.get('/test-api', (req, res) => {
-  res.sendStatus(403).send('Invalid stuff');
+app.get('/test-api', validateToken, (req, res) => {
+  res.status(200).json({ message: 'Success', user: req.user });
 });
 //                      OAuth 2.0 Protocol flow
 // +--------+                                           +---------------+
