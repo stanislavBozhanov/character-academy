@@ -131,7 +131,7 @@ app.post('/login', async (req, res) => {
     await userModel.update({
       refreshToken: refreshToken,
     });
-    res.status(200).json({ message: 'Success', accessToken: `JTW${accessToken}`, refreshToken, user: userObject });
+    res.status(200).json({ message: 'Success', accessToken, refreshToken, user: userObject });
   } else {
     res.status(401).json({ message: 'Invalid password!' });
   }
@@ -192,6 +192,7 @@ function validateToken(req, res, next) {
 
   jwt.verify(token, SECRET, (err, user) => {
     if (err) {
+      console.log(err);
       if (err.name === 'TokenExpiredError') {
         return res.status(401).json({ message: 'Token expired!' });
       }

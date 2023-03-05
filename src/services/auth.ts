@@ -1,6 +1,9 @@
 import { serverRoutes } from './routes';
 import { createErrorResponse, createSuccessResponse, handledFetch } from './utils';
 
+export const jwtAccess = 'jwtAccess';
+export const jwtRefresh = 'jwtRefresh';
+
 export const handleLogin = async (email: string, password: string) => {
   // handle login to return successful data so another function can save it
   const [response, error] = await handledFetch(serverRoutes.login, {
@@ -39,19 +42,19 @@ export const handleRegister = async (email: string, password: string, username: 
 };
 
 export const getAccessJwtToken = (): string => {
-  return sessionStorage.getItem('jwtAccess');
+  return sessionStorage.getItem(jwtAccess);
 };
 
 export const setAccessJwtToken = (token: string): void => {
-  sessionStorage.setItem('jwtAccess', token);
+  sessionStorage.setItem(jwtAccess, token);
 };
 
 export const getRefreshJwtToken = (): string => {
-  return sessionStorage.getItem('jwtRefresh');
+  return sessionStorage.getItem(jwtRefresh);
 };
 
 export const setRefreshJwtToken = (token: string): void => {
-  sessionStorage.setItem('jwtRefresh', token);
+  sessionStorage.setItem(jwtRefresh, token);
 };
 
 export const isAuthenticated = (): boolean => {

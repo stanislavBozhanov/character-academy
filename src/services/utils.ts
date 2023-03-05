@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { httpMethod, APIResponse } from '../interfaces/index';
+import { getAccessJwtToken, getRefreshJwtToken, setAccessJwtToken, setRefreshJwtToken } from './auth';
 import { serverRoutes } from './routes';
 
 export const myLocalStorage = (key: string, defaultValue: Object = null) => {
@@ -69,7 +70,7 @@ const fetchWrapper = () => {
 
   function authHeader() {
     // TODO: For extra security I can check if the url we are requesting belongs to our API
-    const accessToken = sessionStorage.getItem('accessToken');
+    const accessToken = getAccessJwtToken();
     if (accessToken) {
       return new Headers({ Authorization: `Bearer ${accessToken}` });
     }
@@ -86,7 +87,7 @@ const fetchWrapper = () => {
   */
   async function setNewTokens() {
     const [user, _] = myLocalStorage('user');
-    const refreshToken = sessionStorage.getItem('refreshToken');
+    const refreshToken = getRefreshJwtToken();
 
     if (!user || !refreshToken) {
       throw new Error('Missing user or refresh token!');
@@ -103,12 +104,12 @@ const fetchWrapper = () => {
 
     // Error or codes different than 2XX
     if (error || !data.ok) {
-      throw new Error(`${error.message}/nCannot get new token!`); // TODO gotta figure some decent error handling
+      throw new Error(`${error?.message}/nCannot get new token!`); // TODO gotta figure some decent error handling
     }
 
     const { accessToken: newAccsess, refreshToken: newRefresh } = await data.json();
-    sessionStorage.setItem('accessToken', newAccsess);
-    sessionStorage.setItem('refreshToken', newRefresh);
+    setAccessJwtToken(newAccsess);
+    setRefreshJwtToken(newRefresh);
   }
 
   function request(method: httpMethod) {
@@ -133,8 +134,6 @@ const fetchWrapper = () => {
   }
 
   async function handleResponse(response: Response, method?: httpMethod, url?: string, body?: object): Promise<Object> {
-    const navigate = useNavigate();
-
     // accessToken expired
     if (response.status === 401) {
       try {
@@ -143,8 +142,7 @@ const fetchWrapper = () => {
       } catch (error) {
         console.error(error);
         localStorage.setItem('user', null);
-        navigate('/login');
-        return Promise.reject({ error: { message: 'Unable to fetch fresh tokens!' } });
+        return Promise.reject('Unable to fetch fresh tokens!');
       }
 
       return request(method)(url, body);
@@ -155,7 +153,8 @@ const fetchWrapper = () => {
       return Promise.resolve(response);
     }
 
-    return Promise.reject({ error: { message: 'Problem with server response' } });
+    const responseData = await response.json();
+    return Promise.reject(responseData?.message);
   }
 };
 
