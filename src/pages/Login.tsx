@@ -14,10 +14,9 @@ import {
 } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
-import { handleLogin, setAccessJwtToken, setRefreshJwtToken } from '../services/auth';
-import { LoginResponse, responseSuccess } from '../interfaces/index';
-import { clientRoutes } from '../services/routes';
-import { myLocalStorage } from '../services/utils';
+import { setAccessJwtToken, setRefreshJwtToken } from '../services/auth';
+import { clientRoutes, serverRoutes } from '../services/routes';
+import { handledFetch, myLocalStorage } from '../services/utils';
 
 const Login = () => {
   const [values, setValues] = useState({
@@ -39,24 +38,40 @@ const Login = () => {
   };
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    const response: LoginResponse = await handleLogin(values.email, values.password);
+    const [response, error] = await handledFetch(serverRoutes.login, {
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      method: 'POST',
+      body: JSON.stringify({ email: values.email, password: values.password }),
+    });
 
-    if (response.error) {
+    if (error) {
+      console.error(error);
       navigate(`/${clientRoutes.error}`); // TODO: fix this with better error handling
       return;
     }
 
-    const { user, accessToken, refreshToken } = response.data;
+    if (!response.ok) {
+      const data = await response.json();
+      console.log(data?.message);
+      navigate(`/${clientRoutes.login}`);
+      return;
+    }
+
+    const { user, accessToken, refreshToken } = await response.json();
+
+    if (!user || !accessToken || !refreshToken) {
+      console.error('missing data from sever');
+      navigate(`/${clientRoutes.error}`);
+      return;
+    }
 
     setStoredUser(user);
     setAccessJwtToken(accessToken);
     setRefreshJwtToken(refreshToken);
-
-    if (response.status === responseSuccess) {
-      navigate(clientRoutes.dashboard);
-    } else {
-      navigate(clientRoutes.login);
-    }
+    navigate(clientRoutes.dashboard);
   };
 
   //disable submit button if email or password are empty

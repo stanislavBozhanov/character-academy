@@ -22,7 +22,14 @@ const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path='/' element={<App />}>
-      <Route index element={<Dashboard />} />
+      <Route
+        index
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        }
+      />
       <Route path='register' element={<Register />} />
       <Route path='login' element={<Login />} />
       <Route

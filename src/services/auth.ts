@@ -1,45 +1,5 @@
-import { serverRoutes } from './routes';
-import { createErrorResponse, createSuccessResponse, handledFetch } from './utils';
-
 export const jwtAccess = 'jwtAccess';
 export const jwtRefresh = 'jwtRefresh';
-
-export const handleLogin = async (email: string, password: string) => {
-  // handle login to return successful data so another function can save it
-  const [response, error] = await handledFetch(serverRoutes.login, {
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-    },
-    method: 'POST',
-    body: JSON.stringify({ email, password }),
-  });
-
-  if (error) {
-    return createErrorResponse(error);
-  }
-
-  const jsonData = await response.json();
-  return createSuccessResponse(jsonData);
-};
-
-export const handleRegister = async (email: string, password: string, username: string) => {
-  const [response, error] = await handledFetch(serverRoutes.register, {
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-    },
-    method: 'POST',
-    body: JSON.stringify({ email, password, username }),
-  });
-
-  if (error) {
-    return createErrorResponse(error);
-  }
-
-  const jsonData = await response.json();
-  return createSuccessResponse(jsonData);
-};
 
 export const getAccessJwtToken = (): string => {
   return sessionStorage.getItem(jwtAccess);

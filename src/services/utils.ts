@@ -1,5 +1,4 @@
-import { useNavigate } from 'react-router-dom';
-import { httpMethod, APIResponse } from '../interfaces/index';
+import { httpMethod } from '../interfaces/index';
 import { getAccessJwtToken, getRefreshJwtToken, setAccessJwtToken, setRefreshJwtToken } from './auth';
 import { serverRoutes } from './routes';
 
@@ -23,24 +22,6 @@ export const myLocalStorage = (key: string, defaultValue: Object = null) => {
   };
 
   return [storedValue, setValue];
-};
-
-export const createErrorResponse = (error: Object) => {
-  const result: APIResponse = {
-    status: 'FAIL',
-    error: error,
-    data: null,
-  };
-  return result;
-};
-
-export const createSuccessResponse = (data: Object) => {
-  const result: APIResponse = {
-    status: 'SUCCESS', // probably useless status
-    error: null,
-    data: data,
-  };
-  return result;
 };
 
 export const headers = new Headers({
@@ -104,7 +85,7 @@ const fetchWrapper = () => {
 
     // Error or codes different than 2XX
     if (error || !data.ok) {
-      throw new Error(`${error?.message}/nCannot get new token!`); // TODO gotta figure some decent error handling
+      throw new Error(`${error?.message}. Cannot get new token!`); // TODO gotta figure some decent error handling
     }
 
     const { accessToken: newAccsess, refreshToken: newRefresh } = await data.json();
@@ -112,7 +93,7 @@ const fetchWrapper = () => {
     setRefreshJwtToken(newRefresh);
   }
 
-  function request(method: httpMethod) {
+  function request(method: httpMethod, attempts = 0) {
     return async (url: string, body?: object): Promise<any> => {
       const requestOptions: any = {
         method,
@@ -123,29 +104,41 @@ const fetchWrapper = () => {
         requestOptions.body = JSON.stringify(body);
       }
 
-      // TODO До тук си стигнал. Трябва да разбереш как да го хенлънеш с грешки и тн
+      // TODO handled fetch
       try {
         const response = await fetch(url, requestOptions); // handle error?
-        return handleResponse(response, method, url, body);
+        return handleResponse(response, method, url, body, attempts);
       } catch (error) {
         return Promise.reject(error);
       }
     };
   }
 
-  async function handleResponse(response: Response, method?: httpMethod, url?: string, body?: object): Promise<Object> {
+  // TODO handle response counter to not get endless recursion
+  async function handleResponse(
+    response: Response,
+    method?: httpMethod,
+    url?: string,
+    body?: object,
+    attempts?: number
+  ): Promise<Object> {
     // accessToken expired
     if (response.status === 401) {
+      if (attempts > 0) {
+        return Promise.reject('Unable to fetch fresh tokens!');
+      }
+
       try {
         console.log('Set new tokens');
+        attempts += 1;
         await setNewTokens();
       } catch (error) {
         console.error(error);
         localStorage.setItem('user', null);
-        return Promise.reject('Unable to fetch fresh tokens!');
+        return Promise.reject(error.message);
       }
 
-      return request(method)(url, body);
+      return request(method, attempts)(url, body);
     }
 
     // Response.ok is true for codes between 200 and 299

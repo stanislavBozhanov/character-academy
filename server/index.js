@@ -2,12 +2,12 @@
 const express = require('express');
 const http = require('http');
 const cors = require('cors');
-// const session = require('express-session');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const passport = require('passport');
 const JwtStrategy = require('passport-jwt').Strategy;
 const ExtractJwt = require('passport-jwt').ExtractJwt;
+const Op = require('Sequelize').Op;
 
 const { initializeDb, User } = require('./models/index.js');
 
@@ -18,13 +18,8 @@ const DEFAULT_ROLE = 'user';
 
 const app = express();
 app.use(cors()); // cors is enabled for all requests and all origins
-// app.use(session({ secret: SECRET, resave: true, saveUninitialized: true }));
 app.use(passport.initialize());
-// app.use(passport.session());  // TODO check if passport requires this
 app.use(express.json()); // So we can pull req.body.<params>
-
-const users = [];
-const refreshTokens = {};
 
 const jwtOptions = {
   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -32,30 +27,15 @@ const jwtOptions = {
 };
 
 const jwtStrategy = new JwtStrategy(jwtOptions, (jwtPayload, done) => {
-  // If the token has expiration, raise unauthorized
-  const expirationDate = new Date(jwtPayload.exp * 1000);
-  if (expirationDate < new Date()) {
-    return done(null, false);
-  }
-  const user = jwtPayload;
-  done(null, user);
+  // Token expiration is handled in passport.authenticate. Only user validation is done here
+  done(null, jwtPayload);
 });
-
 passport.use(jwtStrategy);
 
-// TODO check if passport requires this
-// passport.serializeUser((user, done) => {
-//   done(null, user.username);
-// });
-
-app.get('/test_jwt', passport.authenticate('jwt'), (req, res) => {
-  res.status(200).json({ message: 'You are authenticated with JWT!', user: req.user });
-});
-
-// Register a user
 app.post('/register', async (req, res) => {
   if (!req.body.username || !req.body.password || !req.body.email) {
     res.status(400).json({ message: 'Missing email, password or username!' });
+    return;
   }
 
   const username = req.body.username.toString();
@@ -65,42 +45,37 @@ app.post('/register', async (req, res) => {
   const salt = crypto.randomBytes(16).toString('hex');
   const passwordHash = crypto.pbkdf2Sync(password, salt, 100000, 512, 'sha512');
 
-  // TODO check if username already exists and throw an error response
-  // TODO handle creating users with the same name or the same email
-
-  const resultEmail = await User.findAll({
+  const result = await User.findAll({
     where: {
-      email: req.body.email,
+      [Op.or]: [{ email: req.body.email }, { username: req.body.username }],
     },
   });
-  if (resultEmail.length) {
-    res.status(400).json({ message: 'User with that email already exists!' });
+
+  if (result.length) {
+    res.status(400).json({ message: 'User with that username or email already exists!' });
+    return;
   }
 
-  const resultUsername = await User.findAll({
-    where: {
-      username: req.body.username,
-    },
-  });
-  if (resultUsername.length) {
-    res.status(400).json({ message: 'User with that username already exists!' });
+  try {
+    await User.create({
+      username: username,
+      email: email,
+      passwordHash: passwordHash,
+      salt: salt,
+      role: DEFAULT_ROLE,
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
   }
-
-  await User.create({
-    username: username,
-    email: email,
-    passwordHash: passwordHash,
-    salt: salt,
-    role: DEFAULT_ROLE,
-  });
 
   res.status(201).json({ message: 'User successfully created!' });
+  return;
 });
 
-// Login and return token
 app.post('/login', async (req, res) => {
   if (!req.body.email || !req.body.password) {
     res.status(400).json({ message: 'Missing email or password!' });
+    return;
   }
 
   // TODO Make a safe switch to allow only 10 password attempts every 1 hour or something
@@ -122,8 +97,8 @@ app.post('/login', async (req, res) => {
   if (crypto.timingSafeEqual(userData.passwordHash, newHash)) {
     // default role will be user. Admins will be manually created for now
     const userObject = {
-      username: userModel.username,
-      email: userModel.email,
+      username: userData.username,
+      email: userData.email,
       role: DEFAULT_ROLE,
     };
     const accessToken = jwt.sign(userObject, SECRET, { expiresIn: '3h' });
@@ -144,6 +119,7 @@ app.post('/refresh-token', async (req, res) => {
 
   if (!req.body.email || !req.body.refreshToken) {
     res.status(400).json({ message: 'Missing email or refreshToken!' });
+    return;
   }
 
   // verify refresh token
@@ -151,6 +127,7 @@ app.post('/refresh-token', async (req, res) => {
     data = jwt.verify(refreshToken, REFRESH_SECRET);
   } catch (error) {
     res.status(400).json({ message: error?.message });
+    return;
   }
 
   const result = await User.findAll({
@@ -165,52 +142,20 @@ app.post('/refresh-token', async (req, res) => {
       email: userModel.email,
       role: DEFAULT_ROLE,
     };
-    const accessToken = jwt.sign(userObject, SECRET, { expiresIn: '120' }); // temporary set to 120 secs to debug
+    const newAccessToken = jwt.sign(userObject, SECRET, { expiresIn: '3h' });
     const newRefreshToken = jwt.sign(userObject, REFRESH_SECRET, { expiresIn: '7d' });
-    res.status(200).json({ message: 'Success', accessToken: `JWT${accessToken}`, newRefreshToken });
     await userModel.update({
       refreshToken: newRefreshToken,
     });
-    res.status(201).json({ message: 'JTW token updated!' });
+    res.status(200).json({ message: 'Success', accessToken: newAccessToken, refreshToken: newRefreshToken });
+    return;
   } else {
-    res.status(401).json({ message: 'Invalid refresh token!' });
+    res.status(400).json({ message: 'Invalid refresh token!' });
+    return;
   }
 });
 
-function validateToken(req, res, next) {
-  // get token from the request header
-  // request header contains token in the format Bearer <token>
-  const authHeader = req.headers['authorization'];
-  if (!authHeader) {
-    return res.status(400).json({ message: 'Token not present!' });
-  }
-
-  const token = authHeader.split(' ')[1];
-  if (!token) {
-    return res.status(400).json({ message: 'Token not present!' });
-  }
-
-  jwt.verify(token, SECRET, (err, user) => {
-    if (err) {
-      console.log(err);
-      if (err.name === 'TokenExpiredError') {
-        return res.status(401).json({ message: 'Token expired!' });
-      }
-      return res.status(403).json({ message: 'Token invalid!' });
-    } else {
-      req.user = user;
-      next();
-    }
-  });
-}
-
-app.get('/test-some-protected-route', validateToken, (req, res) => {
-  console.log('Valid token!');
-  console.log(req.user.user);
-  res.json({ message: `${req.user.user} successfully accessed post` });
-});
-
-app.get('/test-api', validateToken, (req, res) => {
+app.get('/test-api', passport.authenticate('jwt', { session: false }), (req, res) => {
   res.status(200).json({ message: 'Success', user: req.user });
 });
 //                      OAuth 2.0 Protocol flow

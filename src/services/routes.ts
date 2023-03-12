@@ -14,6 +14,7 @@ export const serverRoutes = {
 export const clientRoutes = {
   login: 'login',
   register: 'register',
+  addWorkout: 'add-workout',
   history: 'history',
   dashboard: '/',
   error: 'error',

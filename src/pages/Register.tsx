@@ -3,10 +3,9 @@ import { Container, Paper, TextField, Button, InputAdornment, IconButton, Box, L
 import Grid from '@mui/material/Unstable_Grid2';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 // import ReCAPTCHA from 'react-google-recaptcha';
-import { handleRegister } from '../services/auth';
-import { APIResponse, responseSuccess } from '../interfaces/index';
 import { useNavigate } from 'react-router-dom';
-import { clientRoutes } from '../services/routes';
+import { clientRoutes, serverRoutes } from '../services/routes';
+import { handledFetch } from '../services/utils';
 
 const TEST_RECAPTCHA_KEY = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI';
 
@@ -33,12 +32,25 @@ const Register = () => {
   };
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    const response: APIResponse = await handleRegister(values.email, values.password, values.username);
-    console.log(response);
-    if (response.status === responseSuccess) {
-      navigate(clientRoutes.login);
+    const [response, error] = await handledFetch(serverRoutes.register, {
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      method: 'POST',
+      body: JSON.stringify({ email: values.email, password: values.password, username: values.username }),
+    });
+
+    if (error) {
+      console.log(error);
+      navigate(`/${clientRoutes.register}`);
+    }
+
+    if (response.ok) {
+      navigate(`/${clientRoutes.login}`);
     } else {
-      navigate(clientRoutes.register);
+      console.log('error');
+      navigate(`/${clientRoutes.register}`);
     }
   };
 
@@ -47,7 +59,6 @@ const Register = () => {
   // };
   //disable submit button if email or password are empty
 
-  console.log(values);
   return (
     <div>
       <Container maxWidth='sm'>
