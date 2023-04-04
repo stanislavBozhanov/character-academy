@@ -10,6 +10,7 @@ import AddWorkout from './pages/AddWorkout';
 import Error from './pages/Error';
 import { isAuthenticated } from './services/auth';
 import { Test } from './pages/Test';
+import AddExercise from './pages/AddExercise';
 
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
   if (!isAuthenticated()) {
@@ -40,6 +41,7 @@ const router = createBrowserRouter(
           </ProtectedRoute>
         }
       />
+      <Route path='add-exercise' element={<AddExercise />} />
       <Route path='add-workout' element={<AddWorkout />} />
       <Route path='test' element={<Test />} />
       <Route path='error' element={<Error />} />

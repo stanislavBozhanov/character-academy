@@ -3,7 +3,7 @@ const User = require('../models/user');
 const UserWorkout = require('../models/userWorkout');
 const Workout = require('../models/workout');
 const WorkoutExercise = require('../models/workoutExercise');
-const Exercise = require('../models/exercise');
+const { Exercise } = require('../models/exercise');
 const Equipment = require('../models/equipment');
 
 // Association definitions

@@ -15,6 +15,7 @@ export const clientRoutes = {
   login: 'login',
   register: 'register',
   addWorkout: 'add-workout',
+  addExercise: 'add-exercise',
   history: 'history',
   dashboard: '/',
   error: 'error',

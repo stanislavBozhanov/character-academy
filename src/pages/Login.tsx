@@ -11,6 +11,7 @@ import {
   FormControlLabel,
   Checkbox,
   Link,
+  Typography,
 } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
@@ -81,6 +82,9 @@ const Login = () => {
       <Container maxWidth='sm'>
         <Grid container spacing={2} direction='column' style={{ minHeight: '100vh' }} justifyContent='center'>
           <Paper elevation={2} sx={{ padding: 5 }}>
+            <Typography variant='h4' component='h1' gutterBottom align='center'>
+              Login
+            </Typography>
             <Box component='form' onSubmit={handleSubmit} noValidate>
               <Grid container spacing={2} direction='column'>
                 <Grid>
