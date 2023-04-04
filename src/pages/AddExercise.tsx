@@ -1,15 +1,20 @@
 import * as React from 'react';
-import { Container, FormControl, Typography, Box, TextField, Button } from '@mui/material';
+import { Container, Typography, Box, TextField, Button, InputLabel, Select, MenuItem } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
+
+const difficultyEnum = {
+  Begginer: 'Begginer',
+  Intermediate: 'Intermediate',
+  Advanced: 'Advanced',
+  Expert: 'Expert',
+};
 
 const AddExercise = () => {
   const [values, setValues] = React.useState({
     name: '',
     abbreviation: '',
     difficulty: '',
-    equipment: '',
     muscleGroup: '',
-    instructions: '',
     variation: '',
     notes: '',
   });
@@ -43,24 +48,28 @@ const AddExercise = () => {
           <Grid>
             <TextField
               type='text'
-              name='difficulty'
-              value={values.difficulty}
+              name='abbreviation'
+              value={values.abbreviation}
               onChange={onChangeInput}
               fullWidth
-              label='Difficulty'
+              label='Exercise abbreviation'
               variant='outlined'
             />
           </Grid>
           <Grid>
-            <TextField
-              type='text'
-              name='equipment'
-              value={values.equipment}
+            <InputLabel id='difficulty-label'>Age</InputLabel>
+            <Select
+              labelId='difficulty-label'
+              id='difficulty-select'
+              value={values.difficulty}
+              label='difficulty'
               onChange={onChangeInput}
-              fullWidth
-              label='Equipment'
-              variant='outlined'
-            />
+            >
+              {}
+              <MenuItem value={10}>Ten</MenuItem>
+              <MenuItem value={20}>Twenty</MenuItem>
+              <MenuItem value={30}>Thirty</MenuItem>
+            </Select>
           </Grid>
           <Grid>
             <TextField
@@ -70,17 +79,6 @@ const AddExercise = () => {
               onChange={onChangeInput}
               fullWidth
               label='Muscle Group'
-              variant='outlined'
-            />
-          </Grid>
-          <Grid>
-            <TextField
-              type='text'
-              name='instructions'
-              value={values.instructions}
-              onChange={onChangeInput}
-              fullWidth
-              label='Instructions'
               variant='outlined'
             />
           </Grid>
