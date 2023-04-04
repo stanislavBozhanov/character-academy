@@ -1,13 +1,13 @@
 import * as React from 'react';
-import { Container, Typography, Box, TextField, Button, InputLabel, Select, MenuItem } from '@mui/material';
+import { Container, Typography, Box, TextField, Button, MenuItem } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
 
-const difficultyEnum = {
-  Begginer: 'Begginer',
-  Intermediate: 'Intermediate',
-  Advanced: 'Advanced',
-  Expert: 'Expert',
-};
+enum DifficultyEnum {
+  Begginer = 'Begginer',
+  Intermediate = 'Intermediate',
+  Advanced = 'Advanced',
+  Expert = 'Expert',
+}
 
 const AddExercise = () => {
   const [values, setValues] = React.useState({
@@ -57,19 +57,22 @@ const AddExercise = () => {
             />
           </Grid>
           <Grid>
-            <InputLabel id='difficulty-label'>Age</InputLabel>
-            <Select
-              labelId='difficulty-label'
+            <TextField
+              name='difficulty'
+              select
               id='difficulty-select'
               value={values.difficulty}
-              label='difficulty'
+              label='Difficulty'
+              helperText='Please select difficulty'
               onChange={onChangeInput}
+              fullWidth
             >
-              {}
-              <MenuItem value={10}>Ten</MenuItem>
-              <MenuItem value={20}>Twenty</MenuItem>
-              <MenuItem value={30}>Thirty</MenuItem>
-            </Select>
+              {Object.values(DifficultyEnum).map((difficulty) => (
+                <MenuItem key={difficulty} value={difficulty}>
+                  {difficulty}
+                </MenuItem>
+              ))}
+            </TextField>
           </Grid>
           <Grid>
             <TextField
