@@ -9,6 +9,9 @@ export const serverRoutes = {
   register: serverRoute('register'),
   tokenRefresh: serverRoute('refresh-token'),
   test: serverRoute('test-api'),
+
+  addExercise: serverRoute('exercise/add'),
+  getAllExercises: serverRoute('exercise/all'),
 };
 
 export const clientRoutes = {
@@ -16,6 +19,7 @@ export const clientRoutes = {
   register: 'register',
   addWorkout: 'add-workout',
   addExercise: 'add-exercise',
+  exercises: 'exercises',
   history: 'history',
   dashboard: '/',
   error: 'error',

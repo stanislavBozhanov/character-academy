@@ -1,6 +1,9 @@
 import * as React from 'react';
 import { Container, Typography, Box, TextField, Button, MenuItem } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
+import { handledFetch } from '../services/utils';
+import { clientRoutes, serverRoutes } from '../services/routes';
+import { useNavigate } from 'react-router-dom';
 
 enum DifficultyEnum {
   Begginer = 'Begginer',
@@ -18,8 +21,34 @@ const AddExercise = () => {
     variation: '',
     notes: '',
   });
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {};
+  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
+    e.preventDefault();
+
+    const [response, error] = await handledFetch(serverRoutes.addExercise, {
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      method: 'POST',
+      body: JSON.stringify(values),
+    });
+
+    if (error) {
+      console.error(error);
+      navigate(`/${clientRoutes.error}`); // TODO: fix this with better error handling
+      return;
+    }
+
+    if (!response.ok) {
+      const data = await response.json();
+      console.log(data?.message);
+    }
+
+    navigate(`/${clientRoutes.exercises}`);
+  };
+
   const onChangeInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const name = e.target.name;
     const value = e.target.value;

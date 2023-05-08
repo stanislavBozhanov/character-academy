@@ -1,27 +1,5 @@
-// import * as React from 'react';
-// import { NavLink, Outlet } from 'react-router-dom';
-
-// const App = () => {
-//   return (
-//     <div>
-//       <h1>Character Academy</h1>
-//       <nav>
-//         <NavLink to='register'>Register</NavLink>
-//         <NavLink to='login'>Login</NavLink>
-//         <NavLink to='history'>History</NavLink>
-//         <NavLink to='add-workout'>Add Workout</NavLink>
-//       </nav>
-
-//       <main>
-//         <Outlet />
-//       </main>
-//     </div>
-//   );
-// };
-
-// export default App;
 import * as React from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
@@ -40,6 +18,7 @@ import { clientRoutes } from './services/routes';
 const pages = [
   { name: 'Dashboard', url: clientRoutes.dashboard },
   { name: 'Add workout', url: clientRoutes.addWorkout },
+  { name: 'Add exercise', url: clientRoutes.addExercise },
   { name: 'History', url: clientRoutes.history },
 ];
 const settings = ['Profile', 'Logout']; // make logged and logged out settings
@@ -47,6 +26,7 @@ const settings = ['Profile', 'Logout']; // make logged and logged out settings
 const App = () => {
   const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(null);
   const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(null);
+  const navigate = useNavigate();
 
   const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElNav(event.currentTarget);
@@ -118,7 +98,13 @@ const App = () => {
                 }}
               >
                 {pages.map((page) => (
-                  <MenuItem key={page.name} onClick={handleCloseNavMenu}>
+                  <MenuItem
+                    key={page.name}
+                    onClick={() => {
+                      handleCloseNavMenu();
+                      navigate(page.url);
+                    }}
+                  >
                     <Typography textAlign='center'>{page.name}</Typography>
                   </MenuItem>
                 ))}
@@ -145,7 +131,14 @@ const App = () => {
             </Typography>
             <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
               {pages.map((page) => (
-                <Button key={page.name} onClick={handleCloseNavMenu} sx={{ my: 2, color: 'white', display: 'block' }}>
+                <Button
+                  key={page.name}
+                  onClick={() => {
+                    handleCloseNavMenu();
+                    navigate(page.url);
+                  }}
+                  sx={{ my: 2, color: 'white', display: 'block' }}
+                >
                   {page.name}
                 </Button>
               ))}
@@ -154,7 +147,7 @@ const App = () => {
             <Box sx={{ flexGrow: 0 }}>
               <Tooltip title='Open settings'>
                 <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                  <Avatar alt='Remy Sharp' src='/static/images/avatar/2.jpg' />
+                  {/* <Avatar alt='Remy Sharp' src='/static/images/avatar/2.jpg' /> */}
                 </IconButton>
               </Tooltip>
               <Menu
