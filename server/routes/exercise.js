@@ -39,4 +39,9 @@ router.post('/add', async (req, res) => {
   return;
 });
 
+router.get('/all', async (req, res) => {
+  const exercises = await Exercise.findAll();
+  res.status(200).json(exercises);
+});
+
 module.exports = router;

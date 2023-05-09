@@ -1,5 +1,14 @@
+require('dotenv').config();
 const express = require('express');
 const router = express.Router();
+const crypto = require('crypto');
+const jwt = require('jsonwebtoken');
+const Op = require('Sequelize').Op;
+const User = require('../models/user');
+
+const DEFAULT_ROLE = 'user';
+const SECRET = process.env.SECRET;
+const REFRESH_SECRET = process.env.REFRESH_SECRET;
 
 router.post('/register', async (req, res) => {
   if (!req.body.username || !req.body.password || !req.body.email) {
@@ -125,3 +134,25 @@ router.post('/refresh-token', async (req, res) => {
 });
 
 module.exports = router;
+
+//                      OAuth 2.0 Protocol flow
+// +--------+                                           +---------------+
+// |        |--(A)------- Authorization Grant --------->|               |
+// |        |                                           |               |
+// |        |<-(B)----------- Access Token -------------|               |
+// |        |               & Refresh Token             |               |
+// |        |                                           |               |
+// |        |                            +----------+   |               |
+// |        |--(C)---- Access Token ---->|          |   |               |
+// |        |                            |          |   |               |
+// |        |<-(D)- Protected Resource --| Resource |   | Authorization |
+// | Client |                            |  Server  |   |     Server    |
+// |        |--(E)---- Access Token ---->|          |   |               |
+// |        |                            |          |   |               |
+// |        |<-(F)- Invalid Token Error -|          |   |               |
+// |        |                            +----------+   |               |
+// |        |                                           |               |
+// |        |--(G)----------- Refresh Token ----------->|               |
+// |        |                                           |               |
+// |        |<-(H)----------- Access Token -------------|               |
+// +--------+           & Optional Refresh Token        +---------------+
