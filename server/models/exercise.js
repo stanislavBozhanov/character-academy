@@ -1,12 +1,6 @@
 const { DataTypes, Sequelize } = require('sequelize');
 const sequelize = require('../db/connection');
-
-const exerciseDifficultyEnum = {
-  Begginer: 'Begginer',
-  Intermediate: 'Intermediate',
-  Advanced: 'Advanced',
-  Expert: 'Expert',
-};
+const { exerciseDifficulty } = require('./enums');
 
 const PK = {
   type: DataTypes.INTEGER,
@@ -23,13 +17,13 @@ const Exercise = sequelize.define(
     abbreviation: DataTypes.STRING,
     difficulty: {
       type: Sequelize.ENUM(
-        exerciseDifficultyEnum.Begginer,
-        exerciseDifficultyEnum.Intermediate,
-        exerciseDifficultyEnum.Advanced,
-        exerciseDifficultyEnum.Expert
+        exerciseDifficulty.BEGGINER,
+        exerciseDifficulty.INTERMEDIATE,
+        exerciseDifficulty.ADVANCED,
+        exerciseDifficulty.EXPERT
       ),
       allowNull: false,
-      defaultValue: exerciseDifficultyEnum.Begginer,
+      defaultValue: exerciseDifficulty.BEGGINER,
     },
     muscleGroup: DataTypes.STRING,
     notes: DataTypes.STRING,
@@ -46,5 +40,4 @@ const Exercise = sequelize.define(
 
 module.exports = {
   Exercise,
-  exerciseDifficultyEnum: exerciseDifficultyEnum,
 };

@@ -1,11 +1,6 @@
 const { DataTypes, Sequelize } = require('sequelize');
 const sequelize = require('../db/connection');
-
-const workoutDifficultyEnum = {
-  Easy: 'Easy',
-  Moderate: 'Moderate',
-  Hard: 'Hard',
-};
+const { workoutDifficulty } = require('./enums');
 
 const PK = {
   type: DataTypes.INTEGER,
@@ -17,14 +12,13 @@ const Workout = sequelize.define('Workout', {
   id: PK,
   name: DataTypes.STRING,
   load: {
-    type: Sequelize.ENUM(workoutDifficultyEnum.Easy, workoutDifficultyEnum.Moderate, workoutDifficultyEnum.Hard),
+    type: Sequelize.ENUM(workoutDifficulty.EASY, workoutDifficulty.MODERATE, workoutDifficulty.HARD),
     allowNull: false,
-    defaultValue: workoutDifficultyEnum.Easy,
+    defaultValue: workoutDifficulty.EASY,
   },
   notes: DataTypes.STRING,
 });
 
 module.exports = {
   Workout,
-  workoutDifficultyEnum: workoutDifficultyEnum,
 };

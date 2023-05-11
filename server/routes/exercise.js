@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { Exercise, difficultyEnum } = require('../models/exercise');
+const { Exercise } = require('../models/exercise');
+const { exerciseDifficulty } = require('../models/enums');
 
 router.post('/add', async (req, res) => {
   if (!req.body || !req.body.name || !req.body.abbreviation) {
@@ -8,28 +9,14 @@ router.post('/add', async (req, res) => {
     return;
   }
 
-  if (Object.values(difficultyEnum).indexOf(req.body.difficulty) === -1) {
+  if (Object.values(exerciseDifficulty).indexOf(req.body.difficulty) === -1) {
     res.status(400).json({ message: 'Invalid difficulty!' });
     return;
   }
 
   // write a serializer for this
   try {
-    const name = req.body.name;
-    const abbreviation = req.body.abbreviation;
-    const difficulty = req.body.difficulty;
-    const muscleGroup = req.body.muscleGroup;
-    const variation = req.body.variation;
-    const notes = req.body.notes;
-
-    await Exercise.create({
-      name: name,
-      abbreviation: abbreviation,
-      difficulty: difficulty,
-      muscleGroup: muscleGroup,
-      variation: variation,
-      notes: notes,
-    });
+    await Exercise.create(req.body);
   } catch (error) {
     res.status(400).json({ message: error.message });
     return;

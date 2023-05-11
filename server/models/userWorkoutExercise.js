@@ -1,6 +1,6 @@
 const { DataTypes, Sequelize } = require('sequelize');
 const sequelize = require('../db/connection');
-const { exerciseRepetitionsType } = require('./enums');
+const { exerciseRepetitionsType, exerciseStatus } = require('./enums');
 
 const PK = {
   type: DataTypes.INTEGER,
@@ -8,7 +8,7 @@ const PK = {
   autoIncrement: true,
 };
 
-const WorkoutExercise = sequelize.define('WorkoutExercise', {
+const UserWorkoutExercise = sequelize.define('UserWorkoutExercise', {
   id: PK,
   order: DataTypes.INTEGER,
   repetitionsType: {
@@ -17,8 +17,9 @@ const WorkoutExercise = sequelize.define('WorkoutExercise', {
     defaultValue: exerciseRepetitionsType.REPETITIONS,
   },
   repetitions: DataTypes.INTEGER,
+  weight: DataTypes.DECIMAL(6, 2),
 });
 
 module.exports = {
-  WorkoutExercise,
+  UserWorkoutExercise,
 };
