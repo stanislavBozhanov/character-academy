@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -18,6 +18,7 @@ import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { setAccessJwtToken, setRefreshJwtToken } from '../services/auth';
 import { clientRoutes, serverRoutes } from '../services/routes';
 import { handledFetch, myLocalStorage } from '../services/utils';
+import { AuthContext } from '../contexts/AuthContext';
 
 const Login = () => {
   const [values, setValues] = useState({
@@ -25,8 +26,13 @@ const Login = () => {
     password: '',
     showPassword: false,
   });
+  const { isAuthenticated, login } = useContext(AuthContext);
   const navigate = useNavigate();
   const [storedUser, setStoredUser] = myLocalStorage('user');
+
+  if (isAuthenticated) {
+    navigate(`/${clientRoutes.dashboard}`);
+  }
 
   const onChangeInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const name = e.target.name;
@@ -69,6 +75,7 @@ const Login = () => {
       return;
     }
 
+    login();
     setStoredUser(user);
     setAccessJwtToken(accessToken);
     setRefreshJwtToken(refreshToken);
@@ -79,44 +86,44 @@ const Login = () => {
 
   return (
     <div>
-      <Container maxWidth='sm'>
-        <Grid container spacing={2} direction='column' style={{ minHeight: '100vh' }} justifyContent='center'>
+      <Container maxWidth="sm">
+        <Grid container spacing={2} direction="column" style={{ minHeight: '100vh' }} justifyContent="center">
           <Paper elevation={2} sx={{ padding: 5 }}>
-            <Typography variant='h4' component='h1' gutterBottom align='center'>
+            <Typography variant="h4" component="h1" gutterBottom align="center">
               Login
             </Typography>
-            <Box component='form' onSubmit={handleSubmit} noValidate>
-              <Grid container spacing={2} direction='column'>
+            <Box component="form" onSubmit={handleSubmit} noValidate>
+              <Grid container spacing={2} direction="column">
                 <Grid>
                   <TextField
-                    type='email'
-                    name='email'
+                    type="email"
+                    name="email"
                     value={values.email}
                     onChange={onChangeInput}
                     fullWidth
-                    label='Enter your email'
-                    placeholder='Email address'
-                    variant='outlined'
+                    label="Enter your email"
+                    placeholder="Email address"
+                    variant="outlined"
                     autoFocus
-                    autoComplete='email'
+                    autoComplete="email"
                   />
                 </Grid>
                 <Grid>
                   <TextField
-                    name='password'
+                    name="password"
                     type={values.showPassword ? 'text' : 'password'}
                     value={values.password}
                     onChange={onChangeInput}
                     fullWidth
-                    label='Enter your password'
-                    placeholder='Password'
-                    variant='outlined'
-                    autoComplete='current-password'
+                    label="Enter your password"
+                    placeholder="Password"
+                    variant="outlined"
+                    autoComplete="current-password"
                     InputProps={{
                       endAdornment: (
-                        <InputAdornment position='end'>
+                        <InputAdornment position="end">
                           <IconButton
-                            aria-label='toggle password visibility'
+                            aria-label="toggle password visibility"
                             onClick={handleClickShowPassword}
                             onMouseDown={handleMouseDownPassword}
                           >
@@ -128,22 +135,22 @@ const Login = () => {
                   />
                 </Grid>
                 <Grid>
-                  <FormControlLabel control={<Checkbox value='remember' color='primary' />} label='Remember me' />
+                  <FormControlLabel control={<Checkbox value="remember" color="primary" />} label="Remember me" />
                 </Grid>
                 <Grid>
-                  <Button fullWidth variant='contained' type='submit'>
+                  <Button fullWidth variant="contained" type="submit">
                     Sign In
                   </Button>
                 </Grid>
               </Grid>
-              <Grid container justifyContent='space-between'>
+              <Grid container justifyContent="space-between">
                 <Grid>
-                  <Link href='#' variant='body2'>
+                  <Link href="#" variant="body2">
                     Forgot password?
                   </Link>
                 </Grid>
                 <Grid>
-                  <Link href='/register' variant='body2'>
+                  <Link href="/register" variant="body2">
                     {"Don't have an account? Sign Up"}
                   </Link>
                 </Grid>
